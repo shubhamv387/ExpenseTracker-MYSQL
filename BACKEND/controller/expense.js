@@ -23,7 +23,25 @@ exports.addExpense = (req, res, next) => {
 
 exports.editExpense = (req, res, next) => {
   const expenseId = req.params.id;
-  res.json({ message: `Updating Expense with Id ${expenseId}` });
+  //   console.log(req.body);
+  Expense.update(
+    {
+      amount: req.body.amount,
+      description: req.body.description,
+      category: req.body.category,
+    },
+    { where: { id: expenseId } }
+  )
+    .then((expense) => {
+      // console.log(expense);
+      res.json({
+        id: expenseId,
+        amount: req.body.amount,
+        description: req.body.description,
+        category: req.body.category,
+      });
+    })
+    .catch((err) => console.log(err.message));
 };
 
 exports.deleteExpense = (req, res, next) => {

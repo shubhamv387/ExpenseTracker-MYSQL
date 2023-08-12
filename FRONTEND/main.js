@@ -11,17 +11,20 @@ form.addEventListener("submit", (e) => {
 
   //creating a unique ID for each Expense Obj
   // let keyId = new Date().getTime();
+
+  // creating new expense object
   const ExpenseObj = {
-    amount: amount.value,
+    amount: parseFloat(amount.value),
     description: description.value,
     category: category.value,
   };
 
+  // POST request to backend
   axios
     .post("http://localhost:4000/api/expenses/add-expense", ExpenseObj)
     .then((res) => {
-      console.log(res.data);
-      showUserOnScreen(res.data);
+      // adding each expense in the Expenselist
+      showExpensesOnScreen(res.data);
     })
     .catch((err) => console.log(err.message));
 
@@ -31,14 +34,22 @@ form.addEventListener("submit", (e) => {
   category.value = "";
 });
 
-function showUserOnScreen(ExpenseObj) {
+function showExpensesOnScreen(ExpenseObj) {
   const expenseList = document.getElementById("expenseList");
 
   //creating a new li element
   const expense = document.createElement("li");
   expense.className = "expenseLi";
 
-  expense.innerHTML = `<div class = "d-block mb-2 text-capitalize"> <span class = "fw-bold"> Amount:</span> ${ExpenseObj.amount} INR <br> <span class = "fw-bold"> Description:</span> ${ExpenseObj.description} <br> <span class = "fw-bold"> Category:</span> ${ExpenseObj.category} </div>`;
+  expense.innerHTML = `
+  <div class = "d-block mb-2 text-capitalize"> 
+    <span class = "fw-bold"> Amount:</span> 
+    ${ExpenseObj.amount} INR <br> 
+    <span class = "fw-bold"> Description:</span> 
+    ${ExpenseObj.description} <br> 
+    <span class = "fw-bold"> Category:</span> 
+    ${ExpenseObj.category} 
+  </div>`;
 
   //Adding Edit Btn to each li element
   let editBtn = document.createElement("button");
@@ -46,31 +57,6 @@ function showUserOnScreen(ExpenseObj) {
   editBtn.appendChild(document.createTextNode("EDIT"));
   expense.appendChild(editBtn);
 
-  editBtn.addEventListener("click", editExpense);
-
-  function editExpense() {
-    document.getElementById("amount").value = ExpenseObj.amount;
-    document.getElementById("description").value = ExpenseObj.description;
-    document.getElementById("category").value = ExpenseObj.category;
-    document.getElementById("amount").focus();
-
-    // let updatedExpense = {
-    //   amount: document.getElementById("amount").value,
-    //   description: document.getElementById("description").value,
-    //   category: document.getElementById("category").value,
-    // };
-
-    axios
-      .delete(
-        `http://localhost:4000/api/expenses/delete-expense/${ExpenseObj.id}`
-      )
-      .then((updatedExpense) => {
-        expenseList.removeChild(expense);
-        console.log(updatedExpense);
-        // showUserOnScreen(updatedExpense);
-      })
-      .catch((err) => console.log(err.message));
-  }
   //Adding delete Btn to each li element
   let deleteBtn = document.createElement("button");
   deleteBtn.className = "btn btn-danger d-inline-block ";
@@ -81,6 +67,64 @@ function showUserOnScreen(ExpenseObj) {
   //Appening the li element to the ul element
   expenseList.append(expense);
 
+  // adding event Listeners to edit btn
+  editBtn.addEventListener("click", editExpense);
+
+  function editExpense() {
+    document.getElementById("submitBtn").style.display = "none";
+    document.getElementById("updateBtn").style.display = "block";
+
+    // Sending the expense values to form inputs
+    document.getElementById("amount").value = ExpenseObj.amount;
+    document.getElementById("description").value = ExpenseObj.description;
+    document.getElementById("category").value = ExpenseObj.category;
+    document.getElementById("amount").focus();
+
+    // Update button onclick event handler
+    document.getElementById("updateBtn").onclick = editedExpense;
+
+    function editedExpense() {
+      newAmount = parseInt(document.getElementById("amount").value);
+      let updatedExpense = {
+        amount: document.getElementById("amount").value,
+        description: document.getElementById("description").value,
+        category: document.getElementById("category").value,
+      };
+
+      // check for the input fields
+      if (
+        updatedExpense.amount === "" ||
+        updatedExpense.description === "" ||
+        updatedExpense.category === ""
+      )
+        alert("All inputs should be filled");
+      else {
+        axios
+          .put(
+            `http://localhost:4000/api/expenses/edit-expense/${ExpenseObj.id}`,
+            updatedExpense
+          )
+          .then((updatedExpense) => {
+            ExpenseObj = updatedExpense.data;
+
+            // manupulating the previous expense data with new data
+            expense.firstElementChild.innerHTML = `<span class = "fw-bold"> Amount:</span> ${ExpenseObj.amount} INR <br> <span class = "fw-bold"> Description:</span> ${ExpenseObj.description} <br> <span class = "fw-bold"> Category:</span> ${ExpenseObj.category}`;
+
+            // resetting the submit and update buttons
+            document.getElementById("submitBtn").style.display = "block";
+            document.getElementById("updateBtn").style.display = "none";
+
+            // resetting the form inputs
+            document.getElementById("amount").value = "";
+            document.getElementById("description").value = "";
+            document.getElementById("category").value = "";
+          })
+          .catch((err) => console.log(err.message));
+      }
+    }
+  }
+
+  // deleting an expense
   deleteBtn.addEventListener("click", deleteExpense);
 
   function deleteExpense() {
@@ -100,7 +144,7 @@ function showOnReload() {
     .get("http://localhost:4000/api/expenses/")
     .then((expenses) => {
       expenses.data.forEach((expense) => {
-        showUserOnScreen(expense);
+        showExpensesOnScreen(expense);
       });
     })
     .catch((err) => console.log(err.message));

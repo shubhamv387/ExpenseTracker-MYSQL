@@ -10,7 +10,7 @@ router.get("/", expenseController.getExpenses);
 router.use("/add-expense", expenseController.addExpense);
 
 // PUT  /api/expenses
-router.put("/edite-expense/:id", expenseController.editExpense);
+router.put("/edit-expense/:id", expenseController.editExpense);
 
 // DELETE  /api/expenses
 router.delete("/delete-expense/:id", expenseController.deleteExpense);
